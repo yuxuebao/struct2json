@@ -11,7 +11,7 @@ extern "C" {
 typedef struct McUsrInfoS
 {
 	int *pInt;
-	int pIntArray[2];
+	int *pIntArray[2];
 	fun_ptr_CbT fun;
 	fun_ptr_CbT funArray[2];
 	enum WEEK_DAY day1;

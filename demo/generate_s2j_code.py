@@ -1,6 +1,13 @@
 #!/usr/bin/python3
+import os
 import re
+import shutil
+import sys
+
 struct_txt = "struct_defination.txt"
+if not os.path.exists(struct_txt):
+    print("错误: 找不到 %s，请先运行 generate_struct_defination.py 生成" % struct_txt)
+    sys.exit(1)
 with open(struct_txt,"r") as f:
     lines = f.readlines()
 #注意:结构体后面不能加任何注释，仅仅是结构体的一般定义就好，不然会解析出问题
@@ -22,7 +29,11 @@ error_print_bin2json=""
 for item in struct_str_split_list:
     s2j_code_str_concat_return = "" #定义最后返回的 struct to json 字符串
     j2s_code_str_concat_return = "" #定义最后返回的 json to struct 字符串
-    struct_name = item.split("{")[1].split("}")[1].split(",")[0].strip()  # 获取结构体名称
+    try:
+        struct_name = item.split("{")[1].split("}")[1].split(",")[0].strip()  # 获取结构体名称
+    except IndexError:
+        print("错误: 无法解析结构体名称（可能包含嵌套花括号或匿名结构体）: %s..." % item[:80])
+        sys.exit(1)
     #print(struct_name)
     if struct_name.find(";")!=-1:
         struct_name=struct_name[:-1]
@@ -91,7 +102,7 @@ for item in struct_str_split_list:
                 j2s_code_str_concat = j2s_code_str_concat + "s2j_struct_get_basic_element(struct_obj_,json_obj, int, "+para_name+");\n\t"
         else: #基本类型
             if para_type in ("char","unsigned char","signed char","int","unsigned","unsigned int","signed int","short","unsigned short","signed short","long","unsigned long","signed long","long long","unsigned long long","signed long long","BOOL","bool","size_t","uint8_t","uint16_t","uint32_t","uint64_t","int8_t","int16_t","int32_t","int64_t","uint8","uint16","uint32","uint64","int8","int16","int32","int64","uint_fast64_t","__int128_t","__uint128_t","float","double","long double"):
-                if para_type in ("float","double","long double","__int128_t","__uint128_t"): #浮点型、128位整型
+                if para_type in ("float","double","long double","__int128_t","__uint128_t"): #浮点型、128位整型；注意 long double 按 double 处理，存在精度损失
                     if "[" in para_name:
                         #print(para_name)
                         left_symbol = para_name.find("[")  # 找到[位置
@@ -175,13 +186,16 @@ for item in struct_str_split_list:
 #print(fun_list)
 
 #将函数列表添加到指定的头文件中
-file = open('my_struct_2_json.h','w')
+# 覆盖前备份已有生成文件，防止手工修改被静默冲掉（内存修复曾因此险些丢失）
+for gen_name in ("my_struct_2_json.c", "my_struct_2_json.h", "error_print.txt"):
+    if os.path.exists(gen_name):
+        shutil.copy2(gen_name, gen_name + ".bak")
 h_header = r"""
 #ifdef __cplusplus
 extern "C" {
 #endif
 """
-h_tail = r"""    
+h_tail = r"""
 #ifdef __cplusplus
 }
 #endif /* end of __cplusplus */
@@ -191,8 +205,8 @@ for i in range(len(fun_list)):
     content = content + "\n" + fun_list[i] +";\n"
 
 content = content + h_tail
-file.write(content.strip())
-file.close()
+with open('my_struct_2_json.h','w') as file:
+    file.write(content.strip())
 
 head_str = r"""
 #include "inc/mc_usr_def.h"
@@ -261,7 +275,7 @@ str_s2j_test2_header = r"""
 
     int array_size = cJSON_GetArraySize(json_struct);
     printf("\nsize:\n%d\n",array_size);
-    int i = 0; \
+    int i = 0;
 
 """
 

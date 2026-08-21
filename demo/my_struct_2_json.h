@@ -17,7 +17,7 @@ void *json_to_struct_McBaseOrdrArrayT(cJSON* json_obj);
 cJSON *struct_to_json_McOcoBaseOrdrT(void* struct_obj);
 
 void *json_to_struct_McOcoBaseOrdrT(cJSON* json_obj);
-    
+
 #ifdef __cplusplus
 }
 #endif /* end of __cplusplus */

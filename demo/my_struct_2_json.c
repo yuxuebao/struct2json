@@ -212,7 +212,7 @@ void *json_to_struct_McOcoBaseOrdrT(cJSON* json_obj)
 
     int array_size = cJSON_GetArraySize(json_struct);
     printf("\nsize:\n%d\n",array_size);
-    int i = 0; \
+    int i = 0;
 
     TEST_S2J_JSON(McUsrInfoT, array_size);
     TEST_S2J_JSON(McBaseOrdrT, array_size);

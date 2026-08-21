@@ -123,7 +123,6 @@ do\
         free(str_json1##type);    \
         free(str_json2##type); \
         s2j_delete_struct_obj(p_struct_obj##type); \
-        s2j_delete_json_obj(json_obj1##type); \
         s2j_delete_json_obj(json_obj2##type); \
     }
 

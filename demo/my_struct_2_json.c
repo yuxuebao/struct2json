@@ -219,6 +219,7 @@ void *json_to_struct_McOcoBaseOrdrT(cJSON* json_obj)
     TEST_S2J_JSON(McBaseOrdrArrayT, array_size);
     TEST_S2J_JSON(McOcoBaseOrdrT, array_size);
 
+    cJSON_Delete(json_obj);
     fclose(fp);
     free(p);
     return 0;

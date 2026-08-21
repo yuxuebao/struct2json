@@ -271,7 +271,8 @@ for i in range(len(struct_name_return.split())):
     #print(str_s2j_test2)
 
 
-void_main_tail = r"""    
+void_main_tail = r"""
+    cJSON_Delete(json_obj);
     fclose(fp);
     free(p);
     return 0;

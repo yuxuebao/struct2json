@@ -61,16 +61,22 @@ typedef struct {
 
 #define S2J_STRUCT_GET_string_ELEMENT(to_struct, from_json, _element) \
     json_temp = cJSON_GetObjectItem(from_json, #_element); \
-    if (json_temp) strncpy((to_struct)->_element, json_temp->valuestring,sizeof((to_struct)->_element)-1);
+    if (json_temp && json_temp->valuestring) { \
+        strncpy((to_struct)->_element, json_temp->valuestring,sizeof((to_struct)->_element)-1); \
+        (to_struct)->_element[sizeof((to_struct)->_element)-1] = '\0'; \
+    }
 
 #define S2J_STRUCT_GET_string_ELEMENT_EX(to_struct, from_json, _element, _defval) \
     { \
+        char *json_str_##_element = NULL; \
         if (from_json) { \
             json_temp = cJSON_GetObjectItem(from_json, #_element); \
-            if (json_temp) strncpy((to_struct)->_element, json_temp->valuestring,sizeof((to_struct)->_element)-1); \
-            else strncpy((to_struct)->_element, _defval,sizeof((to_struct)->_element)-1); \
-        } else { \
-            strncpy((to_struct)->_element, _defval,sizeof((to_struct)->_element)-1); \
+            if (json_temp && json_temp->valuestring) json_str_##_element = json_temp->valuestring; \
+        } \
+        if (!json_str_##_element) json_str_##_element = _defval; \
+        if (json_str_##_element) { \
+            strncpy((to_struct)->_element, json_str_##_element,sizeof((to_struct)->_element)-1); \
+            (to_struct)->_element[sizeof((to_struct)->_element)-1] = '\0'; \
         } \
     }
 
@@ -93,7 +99,12 @@ typedef struct {
     (to_struct)->_element[index] = from_json->valueint;
 
 #define S2J_STRUCT_ARRAY_GET_string_ELEMENT(to_struct, from_json, _element, index) \
-    strncpy((to_struct)->_element[index], from_json->valuestring,sizeof((to_struct)->_element[0])-1);
+    { \
+        if (from_json && from_json->valuestring) { \
+            strncpy((to_struct)->_element[index], from_json->valuestring,sizeof((to_struct)->_element[0])-1); \
+            (to_struct)->_element[index][sizeof((to_struct)->_element[0])-1] = '\0'; \
+        } \
+    }
 
 #define S2J_STRUCT_ARRAY_GET_double_ELEMENT(to_struct, from_json, _element, index) \
     (to_struct)->_element[index] = from_json->valuedouble;
@@ -106,8 +117,15 @@ typedef struct {
     else (to_struct)->_element[index] = _defval;
 
 #define S2J_STRUCT_ARRAY_GET_string_ELEMENT_EX(to_struct, from_json, _element, index, _defval) \
-    if (from_json) strncpy((to_struct)->_element[index], from_json->valuestring,sizeof((to_struct)->_element[0])-1); \
-    else strncpy((to_struct)->_element[index], _defval,sizeof((to_struct)->_element[0])-1);
+    { \
+        char *json_str_##_element = NULL; \
+        if (from_json && from_json->valuestring) json_str_##_element = from_json->valuestring; \
+        else json_str_##_element = _defval; \
+        if (json_str_##_element) { \
+            strncpy((to_struct)->_element[index], json_str_##_element,sizeof((to_struct)->_element[0])-1); \
+            (to_struct)->_element[index][sizeof((to_struct)->_element[0])-1] = '\0'; \
+        } \
+    }
 
 #define S2J_STRUCT_ARRAY_GET_double_ELEMENT_EX(to_struct, from_json, _element, index, _defval) \
     if (from_json) (to_struct)->_element[index] = from_json->valuedouble; \
@@ -200,27 +218,24 @@ typedef struct {
 
 #define S2J_STRUCT_GET_ARRAY_ELEMENT_EX(to_struct, from_json, type, _element, size, _defval) \
     { \
-        size_t index_##_element = 0, size_##_element = 0, realsize_##_element = 0; \
+        size_t index_##_element = 0, realsize_##_element = 0; \
+        cJSON *array_##_element = NULL, *array_item_##_element = NULL, *null_item_##_element = NULL; \
         if (from_json) { \
-            cJSON *array_##_element = NULL, *array_item_##_element = NULL; \
             array_##_element = cJSON_GetObjectItem(from_json, #_element); \
-            if (array_##_element) { \
-                realsize_##_element = cJSON_GetArraySize(array_##_element); \
-                for (;index_##_element < realsize_##_element && index_##_element < size; index_##_element++) { \
-                    array_item_##_element = cJSON_GetArrayItem(array_##_element, index_##_element); \
-                    if (array_item_##_element) { \
-                        S2J_STRUCT_ARRAY_GET_ELEMENT_EX(to_struct, array_item_##_element, type, _element, index_##_element, _defval); \
-                    }\
-                } \
-            } else { \
-                for (;index_##_element < realsize_##_element && index_##_element < size; index_##_element++) { \
-                    S2J_STRUCT_ARRAY_GET_ELEMENT_EX(to_struct, array_##_element, type, _element, index_##_element, _defval); \
-                } \
-            } \
-        } else { \
+        } \
+        if (array_##_element) { \
+            realsize_##_element = cJSON_GetArraySize(array_##_element); \
             for (;index_##_element < realsize_##_element && index_##_element < size; index_##_element++) { \
-                S2J_STRUCT_ARRAY_GET_ELEMENT_EX(to_struct, from_json, type, _element, index_##_element, _defval); \
+                array_item_##_element = cJSON_GetArrayItem(array_##_element, index_##_element); \
+                if (array_item_##_element) { \
+                    S2J_STRUCT_ARRAY_GET_ELEMENT_EX(to_struct, array_item_##_element, type, _element, index_##_element, _defval); \
+                } else { \
+                    S2J_STRUCT_ARRAY_GET_ELEMENT_EX(to_struct, null_item_##_element, type, _element, index_##_element, _defval); \
+                } \
             } \
+        } \
+        for (;index_##_element < size; index_##_element++) { \
+            S2J_STRUCT_ARRAY_GET_ELEMENT_EX(to_struct, null_item_##_element, type, _element, index_##_element, _defval); \
         } \
     }
 
@@ -246,8 +261,10 @@ typedef struct {
         S2J_STRUCT_GET_STRUCT_ELEMENT(struct_##element, to_struct, json_##element, from_json, type, element)     \
         if (json_##element){    \
             type * p_##element = (type *)json_to_struct_##type(json_##element); \
-            *(struct_##element) = *(p_##element);    \
-            s2j_delete_struct_obj(p_##element);        \
+            if (p_##element) { \
+                *(struct_##element) = *(p_##element);    \
+                s2j_delete_struct_obj(p_##element);        \
+            } \
         }    \
         else {    \
             fprintf (stdout, "\nWARNING: Invalid json element(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #element,__FUNCTION__, __FILE__, __LINE__);    \
@@ -265,10 +282,12 @@ typedef struct {
           for (;index_##element < realsize_##element && index_##element < size_##element; index_##element++) { \
              array_item_##element = cJSON_GetArrayItem(array_##element, index_##element); \
              if (array_item_##element) { \
-                 type *struct_##element = &((to_struct)->element[index_##element]); \
                  type * p##element = (type *)json_to_struct_##type(array_item_##element); \
-                 *(struct_##element) = *(p##element); \
-                 s2j_delete_struct_obj(p##element); \
+                 if (p##element) { \
+                     type *struct_##element = &((to_struct)->element[index_##element]); \
+                     *(struct_##element) = *(p##element); \
+                     s2j_delete_struct_obj(p##element); \
+                 } \
              } \
           } \
        } \

@@ -27,7 +27,7 @@
  */
 
 /*
-gcc ../cJSON/cJSON.c ../struct2json/src/*.c ./*.c -I ../cJSON/ -I ../struct2json/inc/ -lm -DDEBUGS2J  -g -o tests2j
+gcc ../cJSON/cJSON.c ../struct2json/src/*.c ./*.c -I ../cJSON/ -I ../struct2json/inc/ -lm -DDEBUGS2J -Wno-int-conversion -g -o tests2j
 
 */
 

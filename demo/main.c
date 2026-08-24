@@ -60,7 +60,7 @@ static void *json_to_struct(cJSON* json_obj) {
 
     /* deserialize data to Student structure object. */
     s2j_struct_get_basic_element(struct_student, json_obj, int, id);
-#if 1
+#if 0
     s2j_struct_get_array_element(struct_student, json_obj, int, score);
     s2j_struct_get_basic_element(struct_student, json_obj, string, name);
     s2j_struct_get_basic_element(struct_student, json_obj, double, weight);

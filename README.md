@@ -65,7 +65,7 @@ typedef struct {
 		支持的数组类型:支持基本类型一维数组，结构体一维数组，字符二维数组（字符串数组）
 #### 3) 测试结构体与JSON转换:
 		cd demo
-		编译测试代码，gcc ../cJSON/cJSON.c ../struct2json/src/*.c ./*.c -I ../cJSON/ -I ../struct2json/inc/ -lm -DDEBUGS2J  -g -o tests2j
+		编译测试代码，gcc ../cJSON/cJSON.c ../struct2json/src/*.c ./*.c -I ../cJSON/ -I ../struct2json/inc/ -lm -DDEBUGS2J -Wno-int-conversion -g -o tests2j
 		测试 ./tests2j 
 		查看output输出和生成的JSON样例文件struct_defination.json；
 		预期输出：*:strcmp:0     *:strcmp:0*:json_cmp:1

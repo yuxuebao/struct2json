@@ -8,3 +8,12 @@ tests2j
 *.a
 *.so
 *.so.*
+
+# CMake / 构建目录
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+CTestTestfile.cmake
+Testing/

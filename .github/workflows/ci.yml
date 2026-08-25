@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install valgrind (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y valgrind
+
+      - name: Configure (CMake)
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests (CTest)
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Run tests (Makefile standalone)
+        run: make -f Makefile.standalone test
+
+      - name: Valgrind memory check (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          valgrind --leak-check=full --error-exitcode=1 \
+            --show-leak-kinds=definite,indirect \
+            ./build/tests/test_s2j
+          valgrind --leak-check=full --error-exitcode=1 \
+            ./build/demo

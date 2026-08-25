@@ -1,0 +1,47 @@
+# Makefile.standalone — 不依赖 CMake 的独立构建
+#
+# 用法:
+#   make -f Makefile.standalone          # 编译 demo
+#   make -f Makefile.standalone test     # 编译并运行测试
+#   make -f Makefile.standalone clean    # 清理编译产物
+
+CC       ?= gcc
+CFLAGS   := -Wall -Wextra -std=c99 -g
+CJSON    := cJSON/cJSON.c
+S2J      := struct2json/src/s2j.c
+INC_S2J  := -I struct2json/inc -I cJSON
+INC_DEMO := -I demo/inc
+LM       := -lm
+
+BUILD := build
+
+# ---- 默认目标 ----
+.PHONY: all demo test clean
+
+all: demo
+
+# ---- Demo ----
+demo: $(BUILD)/demo
+	@echo "== 编译完成，运行: ./$< =="
+
+$(BUILD)/demo: $(CJSON) $(S2J) demo/main.c demo/my_struct_2_json.c
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $(INC_S2J) $(INC_DEMO) \
+		$(CJSON) $(S2J) demo/main.c demo/my_struct_2_json.c \
+		$(LM) -DDEBUGS2J -Wno-int-conversion -o $@
+
+# ---- 测试 ----
+test: $(BUILD)/test_s2j
+	@echo ""
+	@echo "== 运行测试 =="
+	@./$<
+
+$(BUILD)/test_s2j: $(CJSON) $(S2J) tests/test_runner.c
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $(INC_S2J) -I tests \
+		$(CJSON) $(S2J) tests/test_runner.c \
+		$(LM) -o $@
+
+# ---- 清理 ----
+clean:
+	rm -rf $(BUILD)

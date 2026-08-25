@@ -4,6 +4,33 @@ import re
 import shutil
 import sys
 
+
+def load_func_ptr_typedefs(header_dir="./inc"):
+    """从头文件中扫描所有函数指针 typedef，返回类型名集合。
+    支持形如 typedef int (*func_ptr)(int, int); 的定义，
+    覆盖任意命名风格（如 callback_t、handler_fn、CbT 等）"""
+    func_ptr_types = set()
+    if not os.path.isdir(header_dir):
+        return func_ptr_types
+    for fname in sorted(os.listdir(header_dir)):
+        if not fname.endswith(".h") or fname.startswith("."):
+            continue
+        fpath = os.path.join(header_dir, fname)
+        try:
+            with open(fpath, 'r', encoding='UTF-8') as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            with open(fpath, 'r', encoding='GBK', errors='replace') as f:
+                content = f.read()
+        # 去除注释，避免误匹配注释中的函数指针声明
+        content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+        content = re.sub(r'//[^\n]*', '', content)
+        # 匹配: typedef <return_type> (* <name>) (<params>);
+        for m in re.finditer(r'typedef\s+\w[\w\s\*]*\(\s*\*\s*(\w+)\s*\)', content):
+            func_ptr_types.add(m.group(1))
+    return func_ptr_types
+
+
 struct_txt = "struct_defination.txt"
 if not os.path.exists(struct_txt):
     print("错误: 找不到 %s，请先运行 generate_struct_defination.py 生成" % struct_txt)
@@ -16,6 +43,11 @@ struct_str = ""
 for line in lines:
     struct_str += ' '.join(line.split())
 struct_str = re.sub(r'((?<=\n)|^)[\t]*\/\*.*?\*\/\n?|\/\*.*?\*\/|((?<=\n)|^)[\t]*\/\/[^\n]*\n|\/\/[^\n]*', '',struct_str)
+
+# 从头文件自动扫描函数指针 typedef，替代硬编码命名检测
+func_ptr_types = load_func_ptr_typedefs("./inc")
+if func_ptr_types:
+    print("检测到函数指针 typedef: %s" % ', '.join(sorted(func_ptr_types)))
 
 return_code = ""
 #使用typedef进行元素分割，并去除列表中空元素
@@ -87,7 +119,7 @@ for item in struct_str_split_list:
             else:
                 s2j_code_str_concat = s2j_code_str_concat + "s2j_json_set_basic_element(json_obj_, struct_obj_, int, "+para_name+");\n\t"
                 j2s_code_str_concat = j2s_code_str_concat + "s2j_struct_get_basic_element(struct_obj_,json_obj, int, "+para_name+");\n\t"
-        elif para_type.find("enum")!=-1 or para_type.find("CbT")!=-1:  # enum或函数指针（根据实际命名规范识别）
+        elif para_type.find("enum") != -1 or para_type in func_ptr_types or any(t in para_type for t in func_ptr_types):  # enum 或函数指针 typedef（自动从头文件扫描）
             #print(para_type)
             if "[" in para_name:
                 left_symbol = para_name.find("[")  # 找到[位置

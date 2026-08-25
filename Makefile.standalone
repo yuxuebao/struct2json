@@ -13,7 +13,7 @@ INC_S2J  := -I struct2json/inc -I cJSON
 INC_DEMO := -I demo/inc
 LM       := -lm
 
-BUILD := build
+BUILD := build-standalone
 
 # ---- 默认目标 ----
 .PHONY: all demo test clean

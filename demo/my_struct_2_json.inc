@@ -27,7 +27,7 @@
  */
 
 /*
-gcc ../cJSON/cJSON.c ../struct2json/src/*.c ./*.c -I ../cJSON/ -I ../struct2json/inc/ -lm -DDEBUGS2J -Wno-int-conversion -g -o tests2j
+gcc ../cJSON/cJSON.c ../struct2json/src/\*.c ./\*.c -I ../cJSON/ -I ../struct2json/inc/ -lm -DDEBUGS2J -Wno-int-conversion -g -o tests2j
 
 */
 
@@ -44,7 +44,7 @@ do\
 {\
     if (NULL == (p)) \
     {\
-        fprintf (stdout, "\nWARNING: Null pointer accured(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #p,__FUNCTION__, __FILE__, __LINE__);     \
+        fprintf (stdout, "\nWARNING: Null pointer accured(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #p,__func__, __FILE__, __LINE__);     \
         return -1;    \
     }\
 } while (0);
@@ -79,6 +79,7 @@ do\
             printf("%s:json_cmp1:%d\n\n\n",#type, json_cmp1##type); \
             type *p_struct_obj##type =(type *)json_to_struct_##type(json_obj1##type); \
             int cmp##type = memcmp(p_struct_obj##type, &struct_obj##type, sizeof(type)); \
+            (void)cmp##type; \
             printf("\n"); \
             cJSON *json_obj2##type = struct_to_json_##type(p_struct_obj##type); \
             char* str_json2##type = cJSON_Print(json_obj2##type); \

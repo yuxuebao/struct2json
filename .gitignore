@@ -11,7 +11,11 @@ tests2j
 
 # CMake / 构建目录
 build/
+build-standalone/
 CMakeCache.txt
+
+# demo 运行生成的 JSON 样例文件
+struct_defination.json
 CMakeFiles/
 cmake_install.cmake
 Makefile.cmake

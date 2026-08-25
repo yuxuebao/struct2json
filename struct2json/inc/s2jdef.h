@@ -38,6 +38,13 @@ extern "C" {
 
 #define S2J_ARRAY_SIZE(arr) (sizeof(arr)/sizeof((arr)[0]))
 
+/* 抑制 -Wall 下未使用变量的警告（GCC/Clang），非 GCC 编译器为空定义 */
+#ifdef __GNUC__
+#define S2J_UNUSED_VAR __attribute__((unused))
+#else
+#define S2J_UNUSED_VAR
+#endif
+
 
 typedef struct {
     void *(*malloc_fn)(size_t sz);
@@ -186,8 +193,8 @@ typedef struct {
     if (child_json) cJSON_AddItemToObject(to_json, #_element, child_json);
 
 #define S2J_CREATE_STRUCT_OBJECT(struct_obj, type) \
-    cJSON *json_temp; \
-    type *struct_obj = (type *)s2jHook.malloc_fn(sizeof(type)); \
+        cJSON *json_temp S2J_UNUSED_VAR; \
+        type *struct_obj = (type *)s2jHook.malloc_fn(sizeof(type)); \
     if (struct_obj) memset(struct_obj, 0, sizeof(type));
 
 #define S2J_DELETE_STRUCT_OBJECT(struct_obj) \
@@ -267,7 +274,7 @@ typedef struct {
             } \
         }    \
         else {    \
-            fprintf (stdout, "\nWARNING: Invalid json element(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #element,__FUNCTION__, __FILE__, __LINE__);    \
+            fprintf (stdout, "\nWARNING: Invalid json element(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #element,__func__, __FILE__, __LINE__);    \
         } \
     }
 
@@ -292,7 +299,7 @@ typedef struct {
           } \
        } \
        else {    \
-          fprintf (stdout, "\nWARNING: Invalid json element(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #element,__FUNCTION__, __FILE__, __LINE__);    \
+          fprintf (stdout, "\nWARNING: Invalid json element(%s). [FUNCTION:%s, FILE:%s, LINE:%d]\n", #element,__func__, __FILE__, __LINE__);    \
        }    \
     }
 

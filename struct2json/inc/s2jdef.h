@@ -148,8 +148,13 @@ typedef struct {
     cJSON_AddNumberToObject(to_json, #_element, (double)(from_struct)->_element);
 
 #define S2J_JSON_SET_string_ELEMENT(to_json, from_struct, _element) \
-    (from_struct)->_element[sizeof((from_struct)->_element)-1] = '\0'; \
-    cJSON_AddStringToObject(to_json, #_element, (from_struct)->_element);
+    { \
+        /* 拷贝到局部缓冲并截断,避免修改源结构体(源可能位于只读内存) */ \
+        char _s2j_str_##_element[sizeof((from_struct)->_element)]; \
+        memcpy(_s2j_str_##_element, (from_struct)->_element, sizeof(_s2j_str_##_element)); \
+        _s2j_str_##_element[sizeof(_s2j_str_##_element) - 1] = '\0'; \
+        cJSON_AddStringToObject(to_json, #_element, _s2j_str_##_element); \
+    }
 
 #define S2J_JSON_ARRAY_SET_int_ELEMENT(to_json, from_struct, _element, index) \
     cJSON_AddItemToArray(to_json, cJSON_CreateInt((from_struct)->_element[index]));
@@ -158,8 +163,13 @@ typedef struct {
     cJSON_AddItemToArray(to_json, cJSON_CreateNumber((from_struct)->_element[index]));
 
 #define S2J_JSON_ARRAY_SET_string_ELEMENT(to_json, from_struct, _element, index) \
-    (from_struct)->_element[index][sizeof((from_struct)->_element[0])-1] = '\0'; \
-    cJSON_AddItemToArray(to_json, cJSON_CreateString((from_struct)->_element[index]));
+    { \
+        /* 拷贝到局部缓冲并截断,避免修改源结构体(源可能位于只读内存) */ \
+        char _s2j_str_##_element[sizeof((from_struct)->_element[0])]; \
+        memcpy(_s2j_str_##_element, (from_struct)->_element[index], sizeof(_s2j_str_##_element)); \
+        _s2j_str_##_element[sizeof(_s2j_str_##_element) - 1] = '\0'; \
+        cJSON_AddItemToArray(to_json, cJSON_CreateString(_s2j_str_##_element)); \
+    }
 
 #define S2J_JSON_ARRAY_SET_ELEMENT(to_json, from_struct, type, _element, index) \
     S2J_JSON_ARRAY_SET_##type##_ELEMENT(to_json, from_struct, _element, index)

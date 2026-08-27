@@ -282,7 +282,7 @@ static cJSON_bool decode_array_index_from_pointer(const unsigned char * const po
         return 0;
     }
 
-    for (position = 0; (pointer[position] >= '0') && (pointer[0] <= '9'); position++)
+    for (position = 0; (pointer[position] >= '0') && (pointer[position] <= '9'); position++)
     {
         parsed_index = (10 * parsed_index) + (size_t)(pointer[position] - '0');
 
@@ -917,7 +917,7 @@ static int apply_patch(cJSON *object, const cJSON *patch, const cJSON_bool case_
     if ((opcode == MOVE) || (opcode == COPY))
     {
         cJSON *from = get_object_item(patch, "from", case_sensitive);
-        if (from == NULL)
+        if (!cJSON_IsString(from))
         {
             /* missing "from" for copy/move. */
             status = 4;
@@ -1385,6 +1385,7 @@ static cJSON *merge_patch(cJSON *target, const cJSON * const patch, const cJSON_
             replacement = merge_patch(replace_me, patch_child, case_sensitive);
             if (replacement == NULL)
             {
+                cJSON_Delete(target);
                 return NULL;
             }
 
